@@ -1,30 +1,30 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import api from "../services/api";
 
 export default function SegmentForm({ refresh }) {
   const [segmentId, setSegmentId] = useState("");
   const [month, setMonth] = useState("");
-
   const [works, setWorks] = useState([]);
 
   const workOptions = [
-    {
-      label: "Sand Blasting",
-      value: "sandBlasting",
-    },
-    {
-      label: "Grinding",
-      value: "grinding",
-    },
-    {
-      label: "Loading",
-      value: "loading",
-    },
-    {
-      label: "Steel Bending",
-      value: "steelBending",
-    },
+    { label: "Sand Blasting", value: "sandBlasting" },
+    { label: "Grinding", value: "grinding" },
+    { label: "Loading", value: "loading" },
+    { label: "Steel Bending", value: "steelBending" },
   ];
+
+  const normalizeSegmentId = (id) => {
+    return id.replace(/\s+/g, "").toUpperCase();
+  };
+
+  // 🧠 auto-fill today
+  useEffect(() => {
+    const today = new Date().toISOString().split("T")[0];
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMonth(today);
+  }, []);
+
+  const today = new Date().toISOString().split("T")[0];
 
   const toggleWork = (value) => {
     setWorks((prev) =>
@@ -42,7 +42,7 @@ export default function SegmentForm({ refresh }) {
       }
 
       if (!month) {
-        alert("Select Month");
+        alert("Select Date");
         return;
       }
 
@@ -52,31 +52,32 @@ export default function SegmentForm({ refresh }) {
       }
 
       const payload = {
-        segmentId: segmentId.trim(),
-        month,
+        segmentId: normalizeSegmentId(segmentId),
+        displaySegmentId: segmentId.trim(),
+        month, // single date only
         works,
       };
 
-      console.log(payload);
+      console.log("Payload:", payload);
 
       await api.post("/segments", payload);
 
       alert("Saved Successfully");
 
       setSegmentId("");
-      setMonth("");
       setWorks([]);
+
+      // reset to today
+      setMonth(today);
 
       refresh();
     } catch (err) {
       console.error(err);
-      console.log("ERROR:", err);
-console.log("RESPONSE:", err?.response);
-console.log("DATA:", err?.response?.data);
+
       alert(
         err?.response?.data?.message ||
-        JSON.stringify(err?.response?.data) ||
-        err.message ||
+          JSON.stringify(err?.response?.data) ||
+          err.message ||
           "Save Failed"
       );
     }
@@ -87,42 +88,40 @@ console.log("DATA:", err?.response?.data);
       <div className="row">
         <input
           type="text"
-          placeholder="Segment ID"
+          placeholder="Segment ID (e.g. S10 P (9-10) RHS)"
           value={segmentId}
-          onChange={(e) =>
-            setSegmentId(e.target.value)
-          }
+          onChange={(e) => setSegmentId(e.target.value)}
         />
 
+        {/* 📅 SINGLE DATE */}
         <input
-          type="month"
+          type="date"
           value={month}
-          onChange={(e) =>
-            setMonth(e.target.value)
-          }
+          max={today}   // 🎯 restrict future dates
+          onChange={(e) => setMonth(e.target.value)}
         />
       </div>
+
+      {segmentId && (
+        <div style={{ fontSize: "12px", color: "#555" }}>
+          Normalized ID: <b>{normalizeSegmentId(segmentId)}</b>
+        </div>
+      )}
 
       <div className="checkbox-grid">
         {workOptions.map((item) => (
           <label key={item.value}>
             <input
               type="checkbox"
-              checked={works.includes(
-                item.value
-              )}
-              onChange={() =>
-                toggleWork(item.value)
-              }
+              checked={works.includes(item.value)}
+              onChange={() => toggleWork(item.value)}
             />
             {item.label}
           </label>
         ))}
       </div>
 
-      <button onClick={saveData}>
-        Save
-      </button>
+      <button onClick={saveData}>Save</button>
     </div>
   );
 }
