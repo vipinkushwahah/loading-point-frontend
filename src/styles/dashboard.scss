@@ -57,6 +57,7 @@ body {
 
 .table-wrapper {
   overflow-x: auto;
+  margin: 20px;
 
   table {
     width: 100%;
@@ -67,7 +68,7 @@ body {
   th,
   td {
     border: 1px solid #ddd;
-    padding: 12px;
+    padding: 6px;
     text-align: center;
   }
 

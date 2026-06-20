@@ -64,7 +64,7 @@ export default function ExportButtons({ data }) {
       )})`;
     }
 
-    return "✘ Pending";
+    return " Pending";
   };
 
   const exportExcel = (month) => {
@@ -124,65 +124,104 @@ export default function ExportButtons({ data }) {
           getMonthKey(work?.month) === month
       )
     );
-
+  
     const doc = new jsPDF("landscape");
-
-    // Border
-    doc.rect(5, 5, 287, 200);
-
-    // Company Name
+  
+    const pageWidth =
+      doc.internal.pageSize.width;
+  
+    const pageHeight =
+      doc.internal.pageSize.height;
+  
+    // ================= BORDER =================
+  
+    doc.setDrawColor(0);
+    doc.rect(
+      5,
+      5,
+      pageWidth - 10,
+      pageHeight - 10
+    );
+  
+    // ================= HEADER =================
+  
     doc.setFontSize(22);
     doc.setFont("helvetica", "bold");
+  
     doc.text(
       "RUD INFRA BUILDERS PVT LTD",
-      148,
+      pageWidth / 2,
       18,
       { align: "center" }
     );
-
-    // Location
+  
     doc.setFontSize(11);
     doc.setFont("helvetica", "normal");
+  
     doc.text(
       "Ayodhya, Uttar Pradesh",
-      148,
+      pageWidth / 2,
       26,
       { align: "center" }
     );
-
-    // Divider
-    doc.line(10, 32, 287, 32);
-
-    // Report Title
+  
+    doc.line(
+      10,
+      32,
+      pageWidth - 10,
+      32
+    );
+  
+    // ================= REPORT TITLE =================
+  
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
-
+  
     doc.text(
-      "MONTHLY SEGMENT WORK COMPLETION REPORT",
-      148,
+      "SEGMENT WORK PROGRESS REPORT",
+      pageWidth / 2,
       42,
       { align: "center" }
     );
-
-    doc.setFontSize(11);
-
+  
+    // ================= INFO =================
+  
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+  
     doc.text(
       `Report Month : ${formatMonth(month)}`,
       14,
       54
     );
-
+  
     doc.text(
       `Generated On : ${new Date().toLocaleDateString(
         "en-IN"
       )}`,
-      220,
+      210,
       54
     );
-
+  
+    doc.text(
+      `Generated Time : ${new Date().toLocaleTimeString(
+        "en-IN"
+      )}`,
+      210,
+      60
+    );
+  
+    doc.text(
+      `Total Segments : ${filtered.length}`,
+      14,
+      60
+    );
+  
+    // ================= TABLE =================
+  
     autoTable(doc, {
-      startY: 62,
-
+      startY: 68,
+  
       head: [
         [
           "Segment ID",
@@ -192,31 +231,31 @@ export default function ExportButtons({ data }) {
           "Steel Bending",
         ],
       ],
-
+  
       body: filtered.map((item) => [
         item.segmentId,
-
+  
         getWorkStatus(
           item.works?.sandBlasting,
           month
         ),
-
+  
         getWorkStatus(
           item.works?.grinding,
           month
         ),
-
+  
         getWorkStatus(
           item.works?.loading,
           month
         ),
-
+  
         getWorkStatus(
           item.works?.steelBending,
           month
         ),
       ]),
-
+  
       styles: {
         fontSize: 9,
         cellPadding: 3,
@@ -224,57 +263,104 @@ export default function ExportButtons({ data }) {
         valign: "middle",
         overflow: "linebreak",
       },
-
+  
       headStyles: {
         fillColor: [31, 78, 121],
         textColor: 255,
         fontStyle: "bold",
         fontSize: 10,
       },
-
+  
       alternateRowStyles: {
         fillColor: [245, 245, 245],
       },
-
+  
       columnStyles: {
         0: {
-          cellWidth: 35,
+          cellWidth: 45,
           halign: "left",
         },
-        1: {
-          cellWidth: 55,
-        },
-        2: {
-          cellWidth: 55,
-        },
-        3: {
-          cellWidth: 55,
-        },
-        4: {
-          cellWidth: 55,
-        },
+      },
+  
+      didDrawPage: () => {
+        doc.setFontSize(9);
+  
+        doc.text(
+          "RUD Infra Builders Pvt Ltd | Internal Progress Report",
+          14,
+          pageHeight - 10
+        );
+  
+        doc.text(
+          `Page ${doc.getCurrentPageInfo().pageNumber}`,
+          pageWidth - 25,
+          pageHeight - 10
+        );
       },
     });
-
-    const pageHeight =
-      doc.internal.pageSize.height;
-
+  
+    // ================= SIGNATURES =================
+  
+    const finalY =
+      doc.lastAutoTable.finalY + 20;
+  
     doc.setFontSize(10);
-
-    doc.text(
-      "RUD Infra Builders Pvt Ltd | Internal Progress Report",
-      14,
-      pageHeight - 10
+  
+    // Site Engineer
+    doc.line(
+      30,
+      finalY,
+      90,
+      finalY
     );
-
+  
     doc.text(
-      "Page 1",
+      "Site Engineer",
+      60,
+      finalY + 8,
+      {
+        align: "center",
+      }
+    );
+  
+    // Checked By
+    doc.line(
+      120,
+      finalY,
+      180,
+      finalY
+    );
+  
+    doc.text(
+      "Checked By",
+      150,
+      finalY + 8,
+      {
+        align: "center",
+      }
+    );
+  
+    // Approved By
+    doc.line(
+      210,
+      finalY,
       270,
-      pageHeight - 10
+      finalY
     );
-
+  
+    doc.text(
+      "Approved By",
+      240,
+      finalY + 8,
+      {
+        align: "center",
+      }
+    );
+  
+    // ================= SAVE =================
+  
     doc.save(
-      `RUD_INFRA_REPORT_${month}.pdf`
+      `RUD_SEGMENT_PROGRESS_REPORT_${month}.pdf`
     );
   };
 
